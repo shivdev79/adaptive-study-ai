@@ -56,6 +56,10 @@ async def global_exception_handler(request: Request, exc: Exception):
         content={"detail": "An internal server error occurred. Please try again later."}
     )
 
+@app.get("/")
+def root():
+    return {"status": "ok", "app": settings.PROJECT_NAME, "version": settings.VERSION}
+
 # Include Routers
 app.include_router(auth.router, prefix=settings.API_V1_STR)
 app.include_router(courses.router, prefix=settings.API_V1_STR)
