@@ -638,6 +638,7 @@ export default function SummaryPage() {
           )}
 
           {/* Summary Result */}
+          {/* Summary Result */}
           {!loading && summaryData && (
             <div className="space-y-8">
               {/* Document Banner + Actions */}
@@ -645,12 +646,14 @@ export default function SummaryPage() {
                 <div className="flex flex-wrap items-start justify-between gap-4">
                   <div>
                     <span className="text-[10px] uppercase font-bold tracking-widest px-2.5 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/25">
-                      {summaryData.document_title.endsWith('.ppt') || summaryData.document_title.endsWith('.pptx')
+                      {(summaryData.document_title || '').endsWith('.ppt') || (summaryData.document_title || '').endsWith('.pptx')
                         ? '📊 PowerPoint Presentation'
                         : '📄 Study Document'}
                     </span>
-                    <h2 className="text-2xl font-extrabold text-white tracking-tight mt-2">{summaryData.document_title}</h2>
-                    <p className="text-xs text-slate-400 mt-1">{summaryData.sections.length} sections extracted &bull; {summaryData.key_topics.length} key topics</p>
+                    <h2 className="text-2xl font-extrabold text-white tracking-tight mt-2">{summaryData.document_title || 'Document Summary'}</h2>
+                    <p className="text-xs text-slate-400 mt-1">
+                      {(summaryData.sections || []).length} sections extracted &bull; {(summaryData.key_topics || []).length} key topics
+                    </p>
                   </div>
 
                   <div className="flex items-center gap-2">
@@ -675,7 +678,7 @@ export default function SummaryPage() {
                   <h4 className="text-xs font-bold text-cyan-400 uppercase tracking-wider flex items-center gap-2 mb-3">
                     <Sparkles className="w-4 h-4" /> Executive Summary
                   </h4>
-                  <p className="text-sm text-slate-200 leading-relaxed">{summaryData.executive_summary}</p>
+                  <p className="text-sm text-slate-200 leading-relaxed">{summaryData.executive_summary || 'No summary generated yet.'}</p>
                 </div>
 
                 {/* Key Topics Row */}
@@ -692,58 +695,60 @@ export default function SummaryPage() {
               </div>
 
               {/* Section Breakdown */}
-              <div className="space-y-5">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-base font-bold text-white flex items-center gap-2">
-                    <Layers className="w-5 h-5 text-cyan-400" /> Section & Slide Breakdown
-                  </h3>
-                  <span className="text-xs text-slate-500">{summaryData.sections.length} sections</span>
-                </div>
-
-                {summaryData.sections.map((section, idx) => (
-                  <div key={idx} className="p-5 rounded-2xl bg-[#050d1f]/70 border border-[#0c1a2e] hover:border-slate-700 transition-colors">
-                    {/* Section header */}
-                    <h4 className="text-sm font-bold text-white flex items-center gap-2.5 mb-3">
-                      <span className="w-7 h-7 rounded-full bg-cyan-500/20 text-cyan-400 text-xs flex items-center justify-center font-extrabold border border-cyan-500/25 shrink-0">
-                        {idx + 1}
-                      </span>
-                      {section.section_title}
-                    </h4>
-
-                    {/* Key Concepts */}
-                    {section.key_concepts && section.key_concepts.length > 0 && (
-                      <div className="flex flex-wrap gap-1.5 pl-9 mb-3">
-                        {section.key_concepts.map((concept, cIdx) => (
-                          <span key={cIdx} className="text-[11px] px-2.5 py-0.5 rounded-md bg-slate-800 text-slate-300 border border-[#0c1a2e]">
-                            {concept}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-
-                    {/* Bullets */}
-                    <ul className="pl-9 space-y-1.5 text-sm text-slate-300 leading-relaxed list-disc list-outside">
-                      {section.summary_bullets.map((bullet, bIdx) => (
-                        <li key={bIdx}>{bullet}</li>
-                      ))}
-                    </ul>
-
-                    {/* Formulas/Definitions */}
-                    {section.important_formulas_or_definitions && section.important_formulas_or_definitions.length > 0 && (
-                      <div className="ml-9 mt-4 p-3.5 rounded-xl bg-cyan-950/30 border border-cyan-500/20">
-                        <h5 className="font-bold text-cyan-300 text-xs flex items-center gap-1.5 mb-2">
-                          <Lightbulb className="w-3.5 h-3.5 text-cyan-400" /> Key Formulas / Definitions
-                        </h5>
-                        <ul className="space-y-1">
-                          {section.important_formulas_or_definitions.map((item, fIdx) => (
-                            <li key={fIdx} className="font-mono text-xs text-cyan-200">• {item}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
+              {(summaryData.sections || []).length > 0 && (
+                <div className="space-y-5">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-base font-bold text-white flex items-center gap-2">
+                      <Layers className="w-5 h-5 text-cyan-400" /> Section & Slide Breakdown
+                    </h3>
+                    <span className="text-xs text-slate-500">{(summaryData.sections || []).length} sections</span>
                   </div>
-                ))}
-              </div>
+
+                  {(summaryData.sections || []).map((section, idx) => (
+                    <div key={idx} className="p-5 rounded-2xl bg-[#050d1f]/70 border border-[#0c1a2e] hover:border-slate-700 transition-colors">
+                      {/* Section header */}
+                      <h4 className="text-sm font-bold text-white flex items-center gap-2.5 mb-3">
+                        <span className="w-7 h-7 rounded-full bg-cyan-500/20 text-cyan-400 text-xs flex items-center justify-center font-extrabold border border-cyan-500/25 shrink-0">
+                          {idx + 1}
+                        </span>
+                        {section.section_title || `Section ${idx + 1}`}
+                      </h4>
+
+                      {/* Key Concepts */}
+                      {section.key_concepts && section.key_concepts.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5 pl-9 mb-3">
+                          {section.key_concepts.map((concept, cIdx) => (
+                            <span key={cIdx} className="text-[11px] px-2.5 py-0.5 rounded-md bg-slate-800 text-slate-300 border border-[#0c1a2e]">
+                              {concept}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Bullets */}
+                      <ul className="pl-9 space-y-1.5 text-sm text-slate-300 leading-relaxed list-disc list-outside">
+                        {(section.summary_bullets || []).map((bullet, bIdx) => (
+                          <li key={bIdx}>{bullet}</li>
+                        ))}
+                      </ul>
+
+                      {/* Formulas/Definitions */}
+                      {section.important_formulas_or_definitions && section.important_formulas_or_definitions.length > 0 && (
+                        <div className="ml-9 mt-4 p-3.5 rounded-xl bg-cyan-950/30 border border-cyan-500/20">
+                          <h5 className="font-bold text-cyan-300 text-xs flex items-center gap-1.5 mb-2">
+                            <Lightbulb className="w-3.5 h-3.5 text-cyan-400" /> Key Formulas / Definitions
+                          </h5>
+                          <ul className="space-y-1">
+                            {section.important_formulas_or_definitions.map((item, fIdx) => (
+                              <li key={fIdx} className="font-mono text-xs text-cyan-200">• {item}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
 
               {/* Exam Takeaways */}
               {summaryData.exam_takeaways && summaryData.exam_takeaways.length > 0 && (
