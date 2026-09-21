@@ -131,18 +131,6 @@ export const Sidebar: React.FC = () => {
           ✕
         </button>
       </div>
-          <h1 className="font-extrabold text-[17px] text-white tracking-tight flex items-center gap-1.5">
-            StudyMind
-            <span
-              className="text-[10px] px-1.5 py-0.5 rounded font-black tracking-wider"
-              style={{ background: 'rgba(34,211,238,0.12)', color: C.primary, border: `1px solid rgba(34,211,238,0.25)` }}
-            >
-              AI
-            </span>
-          </h1>
-          <p className="text-[10px] font-medium" style={{ color: C.textMid }}>Adaptive Learning Engine</p>
-        </div>
-      </div>
 
       {/* ── Navigation ── */}
       <div className="flex-1 overflow-y-auto px-3 py-4 space-y-5">

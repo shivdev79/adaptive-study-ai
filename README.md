@@ -1,137 +1,144 @@
-# StudyMind AI — Adaptive AI-Powered Learning Platform
+# 🎓 StudyMind AI — Adaptive AI-Powered Study Platform
 
-**StudyMind AI** is a production-quality, end-to-end adaptive study assistant that transforms raw course materials (PDFs, notes, textbooks, previous year exam papers) into a personalized learning system.
+> **Grounded RAG Architecture • Zero Hallucination Q&A • Slide & Page Citations • 10-Module Study Ecosystem**
 
-It features grounded Retrieval-Augmented Generation (RAG), multi-mode AI tutoring (including Socratic mode), dynamic diagnostic & adaptive quiz generation, semantic answer evaluation, explainable student mastery tracking (0–100 score), mistake memory, PYQ frequency analysis, automated study planning (including 2-Hour Crash Mode), spaced repetition (SuperMemo SM-2), interactive knowledge graphs, special numerical/coding solvers, and teacher analytics.
-
----
-
-## Tech Stack
-
-### Frontend
-- **Framework**: Next.js 14 (App Router)
-- **Language**: TypeScript
-- **Styling**: Tailwind CSS, Custom Glassmorphism SaaS aesthetics
-- **UI Icons**: Lucide React
-- **Data Visualization**: Recharts
-- **Voice Support**: HTML5 Web Speech API (Speech-to-Text & Text-to-Speech)
-
-### Backend
-- **Framework**: Python 3.11+, FastAPI
-- **Database**: PostgreSQL (SQLAlchemy ORM with automatic SQLite fallback for standalone local execution)
-- **Authentication**: JWT authentication with SHA-256 HMAC & password hashing
-- **Data Validation**: Pydantic v2
-- **Testing**: pytest
-
-### AI / RAG Pipeline
-- **Provider Layer**: Configurable abstraction supporting OpenAI API (GPT-4o / GPT-4o-mini), HuggingFace, or Local Mock Engine
-- **RAG Architecture**: Hybrid BM25 Keyword Search + Vector Cosine Similarity
-- **Document Ingestion**: Extract text from PDF (`pypdf`), DOCX (`python-docx`), PPTX (`python-pptx`), and TXT with structure & section heading detection
+StudyMind AI is an adaptive, AI-powered study platform designed to transform static course materials (PPTs, PDFs, lecture notes, and past year exam papers) into an interactive, personalized learning environment. Built on a Grounded Retrieval-Augmented Generation (RAG) pipeline, StudyMind AI restricts LLM responses strictly to your uploaded course documents, providing verified page-level source citations, diagnostic quizzes, automated weak topic tracking, and minute-by-minute study planning.
 
 ---
 
-## Directory Structure
+## 🖼️ User Interface Showcase
+
+### 📊 Adaptive Student Dashboard
+> Features the **Aurora AI** dark theme, adaptive subject pill, core 10-module hubs, mastery index growth tracking, and real-time revision alerts.
+![StudyMind AI Dashboard](docs/screenshots/dashboard_page.png)
+
+---
+
+### 🔑 Authentication & Login
+> Cosmic grid background with ambient glow, glassmorphism authentication card, and floating feature indicators.
+![StudyMind AI Login](docs/screenshots/login_page.png)
+
+---
+
+### 📖 Grounded Document Summary & PDF Chapter Breakdown
+> Instant section summaries, page citations, and PDF export functionality generated directly from uploaded PPTs/PDFs.
+![StudyMind AI Document Summary](docs/screenshots/summary_page.png)
+
+---
+
+### 📝 Diagnostic Quiz & MCQ Generator
+> Auto-generated diagnostic multiple-choice questions with answer keys and explanations grounded in uploaded course content.
+![StudyMind AI Diagnostic Quiz](docs/screenshots/quiz_page.png)
+
+---
+
+## ⚡ Key Features & Core Modules
+
+1. **📄 Document Ingestion & RAG Base**: Upload PPTs, PPTXs, PDFs, DOCXs, and TXTs. Extracts slide text and builds a 384-dimensional vector store index.
+2. **🔎 Grounded RAG AI Tutor**: Multi-mode Q&A (*Beginner Analogy*, *Socratic Dialogue*, *Exam Prep*) with verified slide and page citations.
+3. **📝 MCQ & Diagnostic Quiz Generator**: Automated generation of diagnostic questions directly from course slides.
+4. **✍️ Semantic Descriptive Evaluator**: Semantic evaluation of short & long written conceptual answers.
+5. **📊 PYQ & Exam Frequency Analyzer**: Extracts repeated historical exam questions, frequency metrics, and topic weightings.
+6. **🎯 Weak Topic Detection & Vault**: Automatically captures recurring quiz errors and routes them to flashcards.
+7. **📅 Personal Study Planner & 2-Hour Crash Mode**: Generates adaptive study schedules and minute-by-minute crash mode timetables.
+8. **🔄 Spaced Repetition (SuperMemo SM-2)**: Algorithmically scheduled flashcard revision cycles for maximum long-term memory retention.
+9. **🕸️ Interactive Knowledge Graph**: Visual node-link network mapping course concept hierarchies and prerequisite relationships.
+10. **📈 Analytics & Exam Readiness Index**: Real-time 0-100% Exam Readiness score tracking student performance growth.
+
+---
+
+## 🏗️ System Architecture & Tech Stack
 
 ```
-.
-├── backend/
-│   ├── app/
-│   │   ├── ai/                      # LLM Abstraction, Embeddings, RAG & Prompts
-│   │   │   ├── prompts/             # Centralized Prompt Templates
-│   │   │   ├── embedding_service.py # Vector embedding calculator
-│   │   │   ├── llm_provider.py      # OpenAI & Local Mock Engine
-│   │   │   └── rag_service.py       # Hybrid BM25 + Vector RAG
-│   │   ├── api/
-│   │   │   └── routers/             # REST Routers (Auth, Courses, Tutor, Quiz, etc.)
-│   │   ├── core/                    # Security, Config & JWT
-│   │   ├── database/                # SQLAlchemy session & Base engine
-│   │   ├── models/                  # Database Entities (User, Course, Quiz, Flashcard, etc.)
-│   │   ├── schemas/                 # Pydantic Request & Response schemas
-│   │   ├── services/                # Business logic (Mastery, Planner, Ingestion, SM-2)
-│   │   └── main.py                  # FastAPI Application Entrypoint
-│   ├── tests/                       # Pytest test suite
-│   ├── Dockerfile
-│   └── requirements.txt
-├── frontend/
-│   ├── src/
-│   │   ├── app/                     # Next.js App Router Pages (Dashboard, Tutor, Quiz, etc.)
-│   │   ├── components/layout/       # Navbar, Sidebar layout components
-│   │   └── lib/api.ts               # Axios API client wrapper with JWT interceptor
-│   ├── Dockerfile
-│   └── package.json
-├── docker-compose.yml               # Multi-container orchestration (Postgres, Backend, Frontend)
-├── .env.example                     # Environment Configuration Template
-└── README.md
+┌─────────────────────────────────────────────────────────────────────────┐
+│                           NEXT.JS 14 FRONTEND                           │
+│     (TypeScript • Tailwind CSS • Aurora AI Theme • Recharts • Lucide)     │
+└────────────────────────────────────┬────────────────────────────────────┘
+                                     │ REST API Requests
+                                     ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│                             FASTAPI BACKEND                             │
+│       (PyMuPDF • python-pptx • Sentence-Transformers • SQLite ORM)       │
+└────────────────────────────────────┬────────────────────────────────────┘
+                                     │ Grounded Vector Context
+                                     ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│                          GROQ LLM CLOUD INFERENCE                       │
+│                   (Llama-3 / GPT-OSS 20B LPUs Sub-Second)               │
+└─────────────────────────────────────────────────────────────────────────┘
 ```
 
----
-
-## Key Features
-
-1. **Grounded RAG AI Tutor**: Answers student questions strictly based on uploaded course documents with page & section source citations. Supports 6 Tutor Modes: *Exam Mode, Beginner Mode, Socratic Mode, Deep Learning, Interview Mode, Quick Revision*.
-2. **Adaptive Quiz Engine**: Generates grounded MCQs, short answers, and numerical questions. Evaluates student answers semantically, providing correctness scores, missing concepts, model answers, and improvement suggestions.
-3. **Explainable Student Mastery Engine**: Calculates an explainable score between 0 and 100 based on accuracy, question difficulty, recency decay, and repeated mistakes.
-4. **Mistake Vault**: Stores every incorrect response with question, student response, correct model answer, and resolution status.
-5. **Personalized Study Planner & 2-Hour Crash Mode**: Generates schedules dynamically. Includes a "Crash Mode" button ("I have 2 hours") prioritizing weak concepts, high-frequency PYQs, and revision.
-6. **Spaced Repetition Flashcards**: SuperMemo SM-2 algorithm scheduler with "Again / Hard / Good / Easy" ratings.
-7. **PYQ Frequency Analyzer**: Analyzes historical exam papers and displays topic appearance frequencies.
-8. **Interactive Knowledge Graph**: Visual node-link concept explorer color-coded by mastery score.
-9. **Numerical & Coding Solvers**: Step-by-step numerical problem solver ("Teach Me" mode) and code debugger/complexity analyzer.
-10. **Teacher Dashboard**: Aggregated class metrics, class weak concepts, and managed course overviews.
+- **Frontend**: Next.js 14 (App Router), TypeScript, Vanilla CSS design tokens (Aurora AI Palette), Lucide React, Recharts.
+- **Backend API**: Python FastAPI, SQLAlchemy ORM, SQLite Database, Pydantic validation schemas.
+- **AI & RAG Engine**: Local `sentence-transformers` (`all-MiniLM-L6-v2`), PyMuPDF, python-pptx, Groq Cloud API SDK.
 
 ---
 
-## Quick Start (Local Setup)
+## 🚀 Quick Start (Local Setup)
 
-### 1. Environment Setup
-Copy `.env.example` to `.env`:
+### 1. Clone the Repository
 ```bash
-cp .env.example .env
+git clone https://github.com/shivdev79/adaptive-study-ai.git
+cd adaptive-study-ai
 ```
 
-### 2. Backend Setup
+### 2. Backend Setup (FastAPI)
 ```bash
 cd backend
-pip install -r requirements.txt
-python -m uvicorn app.main:app --reload --port 8000
-```
-*The FastAPI backend will launch on `http://localhost:8000` with auto-created SQLite database `studymind.db` and seed demo data loaded for "Machine Learning (CS229)".*
+python -m venv venv
+# Windows:
+venv\Scripts\activate
+# Linux/macOS:
+source venv/bin/activate
 
-### 3. Frontend Setup
+pip install -r requirements.txt
+```
+
+Create a `.env` file in the `backend/` directory:
+```env
+LLM_PROVIDER=groq
+GROQ_API_KEY=your_groq_api_key_here
+GROQ_MODEL=openai/gpt-oss-20b
+DATABASE_URL=sqlite:///./studymind.db
+```
+
+Start the backend server:
 ```bash
-cd frontend
+uvicorn app.main:app --reload --port 8000
+```
+*API docs available at `http://localhost:8000/docs`*
+
+### 3. Frontend Setup (Next.js)
+```bash
+cd ../frontend
 npm install
 npm run dev
 ```
-*The Next.js frontend will launch on `http://localhost:3000`.*
+*Open `http://localhost:3000` in your browser.*
 
 ---
 
-## Running with Docker Compose
+## 🌐 Production Deployment Guide
 
-To launch the complete application stack (PostgreSQL database, FastAPI backend, Next.js frontend):
+- **Frontend Deployment (Vercel)**:
+  - Connect your GitHub repository to Vercel (Root Directory: `frontend`).
+  - Add Environment Variable: `NEXT_PUBLIC_API_BASE_URL=https://your-backend-domain.com/api`
 
-```bash
-docker compose up --build
-```
-
-Access services:
-- **Frontend App**: `http://localhost:3000`
-- **Backend API**: `http://localhost:8000`
-- **Interactive API Docs (Swagger UI)**: `http://localhost:8000/docs`
-
----
-
-## Running Automated Tests
-
-Run the backend pytest suite:
-```bash
-cd backend
-python -m pytest -v
-```
+- **Backend Deployment (Render / Railway)**:
+  - Create a Web Service connected to `backend/`.
+  - Build Command: `pip install -r requirements.txt`
+  - Start Command: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
+  - Add Environment Variable: `GROQ_API_KEY=your_groq_api_key`
 
 ---
 
-## Demo Credentials
-- **Student User**: `student@studymind.ai` / `password123`
-- **Teacher User**: `teacher@studymind.ai` / `password123`
+## 📄 Project Presentation & Documentation
+
+The repository includes the full project documentation and presentation deck script in Microsoft Word format:
+- **Presentation Deck Document**: [`StudyMind_AI_Project_Presentation_Report.docx`](StudyMind_AI_Project_Presentation_Report.docx)
+
+---
+
+## 📜 License
+
+Distributed under the MIT License. See `LICENSE` for more information.
