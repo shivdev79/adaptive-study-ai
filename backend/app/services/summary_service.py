@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.models.document import Document, DocumentChunk
 from app.ai.llm_provider import llm
+from app.core.json_utils import parse_json_safely
 
 logger = logging.getLogger(__name__)
 
@@ -76,27 +77,26 @@ class SummaryService:
 
         raw_res = llm.generate_completion(SUMMARY_SYSTEM_PROMPT, user_prompt, json_mode=True, custom_api_key=custom_api_key)
 
-        try:
-            parsed = json.loads(raw_res)
+        parsed = parse_json_safely(raw_res, fallback_default=None)
+        if parsed and isinstance(parsed, dict) and "sections" in parsed:
             parsed["document_id"] = doc.id
             parsed["document_title"] = doc.title
             return parsed
-        except Exception as e:
-            logger.warning(f"Error parsing summary JSON: {e}")
-            return {
-                "document_id": doc.id,
-                "document_title": doc.title,
-                "executive_summary": f"Summary for '{doc.title}' generated from uploaded presentation slides.",
-                "key_topics": [doc.title.split('.')[0]],
-                "sections": [
-                    {
-                        "section_title": "Section 1: Overview of Presentation Materials",
-                        "key_concepts": ["Slide Concepts"],
-                        "summary_bullets": [line.strip() for line in doc_context.split('\n') if len(line.strip()) > 20][:5],
-                        "important_formulas_or_definitions": []
-                    }
-                ],
-                "exam_takeaways": ["Focus on key definitions and section topics."]
-            }
+
+        return {
+            "document_id": doc.id,
+            "document_title": doc.title,
+            "executive_summary": f"Summary for '{doc.title}' generated from uploaded presentation slides.",
+            "key_topics": [doc.title.split('.')[0]],
+            "sections": [
+                {
+                    "section_title": "Section 1: Overview of Presentation Materials",
+                    "key_concepts": ["Slide Concepts"],
+                    "summary_bullets": [line.strip() for line in doc_context.split('\n') if len(line.strip()) > 20][:5],
+                    "important_formulas_or_definitions": []
+                }
+            ],
+            "exam_takeaways": ["Focus on key definitions and section topics."]
+        }
 
 summary_service = SummaryService()

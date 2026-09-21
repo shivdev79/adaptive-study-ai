@@ -11,6 +11,7 @@ from app.ai.llm_provider import llm
 from app.ai.prompts.quiz import QUIZ_GEN_SYSTEM_PROMPT
 from app.ai.prompts.evaluator import ANSWER_EVALUATION_PROMPT
 from app.services.mastery_service import mastery_service
+from app.core.json_utils import parse_json_safely
 
 logger = logging.getLogger(__name__)
 
@@ -51,12 +52,8 @@ class QuizService:
         
         raw_res = llm.generate_completion(QUIZ_GEN_SYSTEM_PROMPT, user_prompt, json_mode=True)
         
-        try:
-            parsed = json.loads(raw_res)
-            questions_data = parsed.get("questions", [])
-        except Exception as e:
-            logger.warning(f"Error parsing generated quiz JSON: {e}")
-            questions_data = []
+        parsed = parse_json_safely(raw_res, fallback_default={})
+        questions_data = parsed.get("questions", [])
 
         quiz = Quiz(
             course_id=course_id,
@@ -142,19 +139,12 @@ class QuizService:
             else:
                 eval_prompt = f"Question: {question.prompt}\nReference Answer: {question.correct_answer}\nStudent Answer: {student_resp}"
                 raw_eval = llm.generate_completion(ANSWER_EVALUATION_PROMPT, eval_prompt, json_mode=True)
-                try:
-                    parsed_eval = json.loads(raw_eval)
-                    is_correct = parsed_eval.get("is_correct", False)
-                    score = float(parsed_eval.get("score", 0.0))
-                    feedback = parsed_eval.get("feedback", "Evaluated based on semantic understanding.")
-                    missing = parsed_eval.get("missing_concepts", [])
-                    model_ans = parsed_eval.get("model_answer", question.correct_answer)
-                except Exception:
-                    is_correct = False
-                    score = 0.0
-                    feedback = "Answer submitted for evaluation."
-                    missing = ["Key concepts review needed"]
-                    model_ans = question.correct_answer
+                parsed_eval = parse_json_safely(raw_eval, fallback_default={})
+                is_correct = parsed_eval.get("is_correct", False)
+                score = float(parsed_eval.get("score", 0.0))
+                feedback = parsed_eval.get("feedback", "Evaluated based on semantic understanding.")
+                missing = parsed_eval.get("missing_concepts", [])
+                model_ans = parsed_eval.get("model_answer", question.correct_answer)
 
             total_score += score
 

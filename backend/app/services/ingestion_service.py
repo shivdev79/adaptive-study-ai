@@ -12,6 +12,7 @@ from app.models.flashcard import Flashcard
 from app.models.pyq import PYQQuestion
 from app.models.mastery import MasteryScore
 from app.ai.llm_provider import llm
+from app.core.json_utils import parse_json_safely
 
 logger = logging.getLogger(__name__)
 
@@ -275,14 +276,9 @@ class IngestionService:
 
             raw_analysis = llm.generate_completion(system_prompt, user_prompt, json_mode=True)
             
-            try:
-                parsed = json.loads(raw_analysis)
-                modules_list = parsed.get("modules", [])
-                pyq_analysis_data = parsed.get("pyq_analysis", {})
-            except Exception as err:
-                logger.warning(f"Error parsing LLM response for doc {doc.id}: {err}")
-                modules_list = []
-                pyq_analysis_data = {}
+            parsed = parse_json_safely(raw_analysis, fallback_default={})
+            modules_list = parsed.get("modules", [])
+            pyq_analysis_data = parsed.get("pyq_analysis", {})
 
             # Save pyq_analysis into document metadata
             meta = doc.doc_metadata or {}
