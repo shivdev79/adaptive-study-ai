@@ -30,15 +30,24 @@ class QuizService:
             .limit(50)
             .all()
         )
-        context_text = "\n\n".join([c.content for c in chunks if c.content]) if chunks else ""
+        
+        valid_chunk_contents = []
+        if chunks:
+            for c in chunks:
+                if c.content:
+                    txt = c.content.strip()
+                    if (" obj" in txt or "/MediaBox" in txt or "/Linearized" in txt or "/FlateDecode" in txt or txt.startswith("%PDF") or "endobj" in txt):
+                        continue
+                    valid_chunk_contents.append(txt)
+
+        context_text = "\n\n".join(valid_chunk_contents)
 
         if not context_text:
-            # Check if any questions already exist in DB for this course
-            existing_q = db.query(Question).join(Topic, Question.topic_id == Topic.id).filter(Topic.course_id == course_id).first()
-            if not existing_q:
-                logger.warning(f"No document content or existing questions found for course {course_id}")
+            topics = db.query(Topic).filter(Topic.course_id == course_id).all()
+            if topics:
+                context_text = f"Course Topics & Concepts: {', '.join([t.name for t in topics])}"
 
-        user_prompt = f"Generate a {quiz_type} quiz with {total_questions} questions for difficulty level '{difficulty}'. Ground strictly in the provided material context:\n{context_text}"
+        user_prompt = f"Generate a {quiz_type} quiz with {total_questions} questions for difficulty level '{difficulty}'. Base questions ONLY on educational concepts, formulas, and theories in the course material. Ignore any formatting or file structural tags.\nContext:\n{context_text}"
         
         raw_res = llm.generate_completion(QUIZ_GEN_SYSTEM_PROMPT, user_prompt, json_mode=True)
         

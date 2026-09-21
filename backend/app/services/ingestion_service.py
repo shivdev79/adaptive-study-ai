@@ -16,6 +16,42 @@ from app.ai.llm_provider import llm
 logger = logging.getLogger(__name__)
 
 class IngestionService:
+    def clean_educational_text(self, text: str) -> str:
+        if not text:
+            return ""
+        pdf_obj_pattern = re.compile(r'\d+\s+\d+\s+obj', re.IGNORECASE)
+        pdf_tag_pattern = re.compile(r'/(MediaBox|Linearized|FlateDecode|Font|Catalog|Pages|ProcSet|ExtGState|Type|Filter|Length|Parent|Resources|Encoding|Widths|FontDescriptor|Root|Info)\b', re.IGNORECASE)
+        
+        lines = text.split("\n")
+        cleaned_lines = []
+        font_stopwords = {
+            "times new roman", "ms mincho", "arial", "calibri", "courier new", "tahoma",
+            "verdana", "georgia", "helvetica", "symbol", "wingdings", "rectangle",
+            "default design", "header placeholder", "date placeholder", "notes placeholder",
+            "footer placeholder", "slide number placeholder", "title placeholder", "body placeholder"
+        }
+        
+        for line in lines:
+            l_trim = line.strip()
+            if not l_trim:
+                continue
+            if (pdf_obj_pattern.search(l_trim) or 
+                pdf_tag_pattern.search(l_trim) or 
+                l_trim.startswith("%PDF") or 
+                l_trim.startswith("endobj") or 
+                l_trim.startswith("stream") or 
+                l_trim.startswith("endstream") or
+                l_trim.startswith("RSoP") or
+                l_trim.startswith("Root Entry") or
+                l_trim.startswith("<<") or
+                l_trim.endswith(">>")):
+                continue
+            l_lower = l_trim.lower()
+            if any(sw in l_lower for sw in font_stopwords) or l_lower.startswith("rectangle ") or l_lower.startswith("oval "):
+                continue
+            cleaned_lines.append(l_trim)
+        return "\n".join(cleaned_lines)
+
     def extract_text(self, file_path: str, file_type: str) -> List[Dict[str, Any]]:
         pages = []
         if not file_path or not os.path.exists(file_path):
@@ -29,8 +65,9 @@ class IngestionService:
                 reader = pypdf.PdfReader(file_path)
                 for idx, page in enumerate(reader.pages):
                     text = page.extract_text() or ""
-                    if text.strip():
-                        pages.append({"page_number": idx + 1, "text": text.strip()})
+                    cleaned = self.clean_educational_text(text)
+                    if cleaned.strip():
+                        pages.append({"page_number": idx + 1, "text": cleaned.strip()})
             except Exception as e:
                 logger.error(f"Error extracting PDF text: {e}")
 
@@ -39,8 +76,9 @@ class IngestionService:
                 import docx
                 doc = docx.Document(file_path)
                 text = "\n".join([p.text for p in doc.paragraphs if p.text.strip()])
-                if text.strip():
-                    pages.append({"page_number": 1, "text": text.strip()})
+                cleaned = self.clean_educational_text(text)
+                if cleaned.strip():
+                    pages.append({"page_number": 1, "text": cleaned.strip()})
             except Exception as e:
                 logger.error(f"Error extracting DOCX text: {e}")
 
@@ -59,8 +97,9 @@ class IngestionService:
                                 if row_text:
                                     slide_texts.append(row_text)
                     full_slide_text = "\n".join(slide_texts)
-                    if full_slide_text.strip():
-                        pages.append({"page_number": idx + 1, "text": full_slide_text})
+                    cleaned = self.clean_educational_text(full_slide_text)
+                    if cleaned.strip():
+                        pages.append({"page_number": idx + 1, "text": cleaned.strip()})
             except Exception as e:
                 logger.error(f"Error extracting PPTX: {e}")
 
@@ -69,45 +108,28 @@ class IngestionService:
             try:
                 with open(file_path, "rb") as f:
                     raw_data = f.read()
-                    
                     extracted_lines = []
 
-                    # 1. Try decoding UTF-16LE strings (common in OLE2 binary PPT files)
                     try:
                         utf16_decoded = raw_data.decode("utf-16le", errors="ignore")
                         utf16_matches = re.findall(r'[\x20-\x7E\s]{4,}', utf16_decoded)
                         for m in utf16_matches:
                             cleaned = m.strip()
-                            if len(cleaned) > 3 and len(cleaned.split()) >= 2 and not cleaned.startswith("RSoP") and not cleaned.startswith("Root Entry"):
+                            if len(cleaned) > 3 and len(cleaned.split()) >= 2:
                                 extracted_lines.append(cleaned)
                     except Exception:
                         pass
 
-                    # 2. Try ASCII / UTF-8 matches
                     ascii_matches = re.findall(rb'[\x20-\x7E\s]{4,}', raw_data)
                     for m in ascii_matches:
                         cleaned = m.decode("ascii", errors="ignore").strip()
-                        if len(cleaned) > 3 and len(cleaned.split()) >= 2 and not cleaned.startswith("RSoP") and not cleaned.startswith("Root Entry"):
+                        if len(cleaned) > 3 and len(cleaned.split()) >= 2:
                             if cleaned not in extracted_lines:
                                 extracted_lines.append(cleaned)
 
-                    # Filter out font names, shape placeholders, and OLE metadata
-                    font_stopwords = {
-                        "times new roman", "ms mincho", "arial", "calibri", "courier new", "tahoma",
-                        "verdana", "georgia", "helvetica", "symbol", "wingdings", "rectangle",
-                        "default design", "header placeholder", "date placeholder", "notes placeholder",
-                        "footer placeholder", "slide number placeholder", "title placeholder", "body placeholder"
-                    }
-                    
-                    filtered_lines = []
-                    for line in extracted_lines:
-                        l_lower = line.lower().strip()
-                        if not any(sw in l_lower for sw in font_stopwords) and not l_lower.startswith("rectangle ") and not l_lower.startswith("oval "):
-                            filtered_lines.append(line)
-
-                    text = "\n".join(filtered_lines[:500])
-                    if text.strip():
-                        pages.append({"page_number": 1, "text": text.strip()})
+                    cleaned_full = self.clean_educational_text("\n".join(extracted_lines[:500]))
+                    if cleaned_full.strip():
+                        pages.append({"page_number": 1, "text": cleaned_full.strip()})
             except Exception as e:
                 logger.error(f"Fallback binary text reader error: {e}")
 
